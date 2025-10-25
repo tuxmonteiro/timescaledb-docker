@@ -42,7 +42,7 @@ RUN set -ex; \
     echo "https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VERSION}/community/" >> /etc/apk/repositories; \
     apk update; \
     if [ "$PG_MAJOR_VERSION" -ge 16 && "$PG_MAJOR_VERSION" -lt 18 ] ; then \
-        apk add --no-cache postgresql${PG_VERSION}-plpython3; \
+        apk add --no-cache postgresql${PG_MAJOR_VERSION}-plpython3; \
     fi
 
 ARG PGVECTOR_VERSION
@@ -53,7 +53,7 @@ RUN set -ex; \
     if [ "$PG_MAJOR_VERSION" -lt 18 ] ; then \
         apk update; \
         apk add --no-cache --virtual .vector-deps \
-            postgresql${PG_VERSION}-dev \
+            postgresql${PG_MAJOR_VERSION}-dev \
             git \
             build-base \
             clang${CLANG_VERSION} \
