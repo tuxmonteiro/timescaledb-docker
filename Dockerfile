@@ -99,7 +99,21 @@ RUN set -ex \
     && cd build && make install \
     && cd ~ \
     \
-    && if [ "${OSS_ONLY}" != "" ]; then rm -f $(pg_config --pkglibdir)/timescaledb-tsl-*.so; fi \
+    && if [ "${OSS_ONLY}" != "" ]; then rm -f $(pg_config --pkglibdir)/timescaledb-tsl-*.so; fi
+
+RUN set -ex \
+    && apk add --update --no-cache python3 py3-pip autoconf libtool automake \
+    && git clone https://github.com/TA-Lib/ta_pg.git /build/ta_pg \
+    && git clone https://github.com/TA-Lib/ta-lib.git /build/ta_pg/ta-lib \
+    && cd /build/ta_pg/ta-lib \
+    && sh autogen.sh \
+    && ./configure \
+    && make install \
+    && cd /build/ta_pg \
+    && python3 scripts/generate_pg_wrappers.py \
+    && make PG_INCLUDE_SERVER=/usr/local/include/postgresql/server ta_pg.so \
+    && cp -v src/*control src/*sql $(pg_config --sharedir)/extension/ \
+    && cp -v ta_pg.so $(pg_config --pkglibdir)/ \
     && apk del .fetch-deps .build-deps \
     && rm -rf /build \
-    && sed -r -i "s/[#]*\s*(shared_preload_libraries)\s*=\s*'(.*)'/\1 = 'timescaledb,\2'/;s/,'/'/" /usr/local/share/postgresql/postgresql.conf.sample
+    && sed -r -i "s/[#]*\s*(shared_preload_libraries)\s*=\s*'(.*)'/\1 = 'ta_pg,timescaledb\2'/;s/,'/'/" /usr/local/share/postgresql/postgresql.conf.sample
